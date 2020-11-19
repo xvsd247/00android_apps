@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/-1234340952/ContentProviderDemo.iml" filepath="$PROJECT_DIR$/.idea/modules/-1234340952/ContentProviderDemo.iml" group="ContentProviderDemo" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/517741491/custContentProviderDemo.iml" filepath="$PROJECT_DIR$/.idea/modules/517741491/custContentProviderDemo.iml" group="ContentProviderDemo/custContentProviderDemo" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/readSmsDemo.iml" filepath="$PROJECT_DIR$/.idea/modules/readSmsDemo.iml" group="ContentProviderDemo/readSmsDemo" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/563208902/readSysContactsDemo.iml" filepath="$PROJECT_DIR$/.idea/modules/563208902/readSysContactsDemo.iml" group="ContentProviderDemo/readSysContactsDemo" />
+    </modules>
+  </component>
+</project>
