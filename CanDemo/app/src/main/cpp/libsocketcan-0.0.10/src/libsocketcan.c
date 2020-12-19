@@ -281,7 +281,7 @@ static int open_nl_sock()
 	}
 
 	addr_len = sizeof(local);
-	if (getsockname(fd, (struct sockaddr *)&local, &addr_len) < 0) {
+	if (getsockname(fd, (struct sockaddr *)&local, (socklen_t *)&addr_len) < 0) {
 		perror("Cannot getsockname");
 		return -1;
 	}

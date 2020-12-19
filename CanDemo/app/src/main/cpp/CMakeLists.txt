@@ -10,5 +10,5 @@ cmake_minimum_required(VERSION 3.4.1)
 # You can define multiple libraries, and CMake builds them for you.
 # Gradle automatically packages shared libraries with your APK.
 
-add_subdirectory(
-                libsocketcan-0.0.10)
+add_subdirectory(libsocketcan-0.0.10)
+add_subdirectory(libcanutils-4.0.6)
