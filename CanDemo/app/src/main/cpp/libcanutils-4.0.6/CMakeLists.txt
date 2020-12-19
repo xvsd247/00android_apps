@@ -11,7 +11,7 @@ message(STATUS "---------------------------------------------${CMAKE_SOURCE_DIR}
 # Gradle automatically packages shared libraries with your APK.
 aux_source_directory(src SRC_DIR)
 add_library( # Sets the name of the library.
-             libcanutils
+             canutils
              # Sets the library as a shared library.
              SHARED
 
@@ -38,7 +38,7 @@ include_directories(include)
 # build script, prebuilt third-party libraries, or system libraries.
 
 target_link_libraries( # Specifies the target library.
-                       libcanutils
+                       canutils
 
                        # Links the target library to the log library
                        # included in the NDK.

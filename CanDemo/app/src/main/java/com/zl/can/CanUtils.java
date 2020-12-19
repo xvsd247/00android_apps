@@ -6,7 +6,7 @@ public class CanUtils {
     private static boolean isLoaded;
     static {
         if (!isLoaded) {
-            System.loadLibrary("libcanutils");
+            System.loadLibrary("canutils");
             isLoaded = true;
         }
     }
