@@ -237,3 +237,98 @@ int main(int argc, char **argv)
 
 	exit (EXIT_SUCCESS);
 }*/
+int can_dump(int family, int type, int proto, int filter_count, int *filter_p, char * data, int *callback(int id, int r, int idc))
+{
+	if(callback == NULL) {
+		printf("callback func not found!");
+		return 1;
+	}
+	if(data == NULL) {
+		printf("data buf not found!");
+		return 1;
+	}
+
+	struct can_frame frame;
+	struct ifreq ifr;
+	struct sockaddr_can addr;
+	char *interface = "can0";
+	char buf[8];
+	int family = PF_CAN, type = SOCK_RAW, proto = CAN_RAW;
+	int n = 0, err;
+	int nbytes, i;
+	int optdaemon = 0;
+	int can_id, can_r;
+
+	signal(SIGPIPE, SIG_IGN);
+
+	printf("interface = %s, family = %d, type = %d, proto = %d\n",
+		   interface, family, type, proto);
+
+	if ((s = socket(family, type, proto)) < 0) {
+		perror("socket");
+		return 1;
+	}
+
+	addr.can_family = family;
+	strncpy(ifr.ifr_name, interface, sizeof(ifr.ifr_name));
+	if (ioctl(s, SIOCGIFINDEX, &ifr)) {
+		perror("ioctl");
+		close(s);
+		return 1;
+	}
+	addr.can_ifindex = ifr.ifr_ifindex;
+
+	if (bind(s, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
+		perror("bind");
+		close(s);
+		return 1;
+	}
+
+	if(filter_count>0 && filter_p != NULL) {
+		for (i = 0; i < filter_count; i++) {
+			add_filter(filter_p[i*2], filter_p[i*2+1]);
+		}
+	}
+
+	if (filter) {
+		if (setsockopt(s, SOL_CAN_RAW, CAN_RAW_FILTER, filter,
+					   filter_count * sizeof(struct can_filter)) != 0) {
+			perror("setsockopt");
+			close(s);
+			exit(1);
+		}
+	}
+
+	if (optdaemon)
+		daemon(1, 0);
+	else {
+		signal(SIGTERM, sigterm);
+		signal(SIGHUP, sigterm);
+	}
+
+	while (running) {
+		if ((nbytes = read(s, &frame, sizeof(struct can_frame))) < 0) {
+			perror("read");
+			close(s);
+			return 1;
+		} else {
+			if (frame.can_id & CAN_EFF_FLAG)
+				can_id = frame.can_id & CAN_EFF_MASK;
+			else
+				can_id = frame.can_id & CAN_SFF_MASK;
+
+			for (i = 0; i < frame.can_dlc; i++) {
+				buf[i] = frame.data[i];
+			}
+			if (frame.can_id & CAN_RTR_FLAG) {
+				can_r = 1;
+			} else {
+				can_r = 0;
+			}
+			callback(can_id, can_r, frame.can_dlc);
+		}
+	}
+
+	close(s);
+	exit (EXIT_SUCCESS);
+}

@@ -33,6 +33,7 @@
 
 #include <libsocketcan.h>
 #include <can_config.h>
+#include <canutils.h>
 
 #ifndef MIN
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
@@ -580,3 +581,41 @@ int main(int argc, char *argv[])
 
 	exit(EXIT_SUCCESS);
 }*/
+int can_config(int bitrate, int loopback, int restart_ms)
+{
+	const char *name = "can0";
+	int state;
+	int count = 0;
+	struct can_ctrlmode cm;
+	memset(&cm, 0, sizeof(cm));
+
+	if(bitrate < 0) {
+		printf("bitrate error!");
+		exit(EXIT_FAILURE);
+	}
+
+	/*set can link down before config*/
+	while (((can_get_state(name, &state)) < 0) && count < 10) {
+		count++;
+		usleep(300000);
+		printf("get state faile!");
+	}
+	if (state != CAN_STATE_BUS_OFF) {
+		can_do_stop(name);
+	}
+	/*set bitrate*/
+	can_set_bitrate(name, bitrate);
+
+	/*set loopback*/
+	if(loopback) {
+		cm.flags |= CAN_CTRLMODE_LOOPBACK;
+	}
+	can_set_ctrlmode(name, &cm);
+
+	/*set interval of auto restart.*/
+	can_set_restart_ms(name, (restart_ms<=0 ? 10 : restart_ms));
+
+	can_do_start(name);
+
+	exit(EXIT_SUCCESS);
+}

@@ -18,7 +18,7 @@
 
 #include <linux/can.h>
 #include <linux/can/raw.h>
-
+/*
 extern int optind, opterr, optopt;
 
 static void print_usage(char *prg)
@@ -44,7 +44,7 @@ static void print_usage(char *prg)
 enum {
 		VERSION_OPTION = CHAR_MAX + 1,
 };
-/*
+
 int main(int argc, char **argv)
 {
 	struct can_frame frame = {
@@ -193,3 +193,81 @@ int main(int argc, char **argv)
 	close(s);
 	return 0;
 }*/
+
+int can_send(int id, int dlc, int extended,int rtr, int infinite, int loopcount, int *data)
+{
+	if(loopcount <= 0) {
+		loopcount = 1;
+	}
+	struct can_frame frame = {
+			.can_id = id,
+	};
+	struct ifreq ifr;
+	struct sockaddr_can addr;
+	char *interface = "can0";
+	int family = PF_CAN, type = SOCK_RAW, proto = CAN_RAW;
+	int s, ret, i;
+	int verbose = 0;
+
+	printf("interface = %s, family = %d, type = %d, proto = %d\n",
+		   interface, family, type, proto);
+
+	s = socket(family, type, proto);
+	if (s < 0) {
+		perror("socket");
+		return 1;
+	}
+
+	addr.can_family = family;
+	strcpy(ifr.ifr_name, interface);
+	if (ioctl(s, SIOCGIFINDEX, &ifr)) {
+		perror("ioctl");
+		return 1;
+	}
+	addr.can_ifindex = ifr.ifr_ifindex;
+
+	if (bind(s, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
+		perror("bind");
+		return 1;
+	}
+
+	for (i = 0; i < dlc; i++) {
+		frame.data[i] = (char)data[i];
+	}
+	if(dlc < 8) {
+		for (i = dlc; i < 8; i++) {
+			frame.data[i] = 0x0;
+		}
+	}
+	frame.can_dlc = 8;
+
+
+	if (extended) {
+		frame.can_id &= CAN_EFF_MASK;
+		frame.can_id |= CAN_EFF_FLAG;
+	} else {
+		frame.can_id &= CAN_SFF_MASK;
+	}
+
+	if (rtr)
+		frame.can_id |= CAN_RTR_FLAG;
+
+	if (verbose) {
+		printf("id: %d ", frame.can_id);
+		printf("dlc: %d\n", frame.can_dlc);
+		for (i = 0; i < frame.can_dlc; i++)
+			printf("0x%02x ", frame.data[i]);
+		printf("\n");
+	}
+
+	while (infinite || loopcount--) {
+		ret = write(s, &frame, sizeof(frame));
+		if (ret == -1) {
+			perror("write");
+			break;
+		}
+	}
+
+	close(s);
+	return 0;
+}

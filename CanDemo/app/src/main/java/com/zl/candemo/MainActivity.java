@@ -17,6 +17,8 @@ public class MainActivity extends AppCompatActivity {
         TextView tv = findViewById(R.id.sample_text);
         //tv.setText(stringFromJNI());
         mCanUtils = new CanUtils();
+        int data[] = {0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77};
+        mCanUtils.flexcan_native_send(0x55, 8, 0, 0, 0, 1, data);
     }
 
     /**

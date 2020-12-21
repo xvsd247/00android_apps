@@ -12,6 +12,8 @@ public class CanUtils {
     }
 
     public native boolean init_native();
+    public native boolean flexcan_native_config(int bitrate, int loopback, int restart_ms);
+    public native boolean flexcan_native_send(int id, int dlc, int extended,int rtr, int infinite, int loopcount, int data[]);
     /**
      * the sonctructor of this class should be call within the thread that has a looper
      * (UI thread or a thread that called Looper.prepare)
