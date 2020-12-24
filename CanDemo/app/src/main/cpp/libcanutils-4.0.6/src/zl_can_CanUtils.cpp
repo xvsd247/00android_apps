@@ -92,7 +92,7 @@ static jboolean flexcan_native_readloop(JNIEnv* env, jclass clazz,
         return -1;
     }
 
-    jmethodID dataReadyNotifly= env->GetMethodID(frame_cls,"dataReadyNotifly","(V)V");
+    jmethodID dataReadyNotifly= env->GetMethodID(frame_cls,"dataReadyNotifly","()V");
     if(dataReadyNotifly == NULL){
         LOGE("get setRemote error!");
         return -1;
@@ -128,6 +128,7 @@ static jboolean flexcan_native_readloop(JNIEnv* env, jclass clazz,
             } else {
                 env->CallVoidMethod(jframe, setRemote, 0);
             }
+            env->CallVoidMethod(jframe, dataReadyNotifly, NULL);
         }
         LOGE("a error occured when read data, please reopen CAN");
         return false;

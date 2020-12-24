@@ -40,13 +40,32 @@ public class MainActivity extends AppCompatActivity implements android.view.View
         mFrame = new Frame(mHandler);
         mCanUtils = new CanUtils(mFrame);
     }
+    public static String bytesToHexString(int[] src){
+        StringBuilder stringBuilder = new StringBuilder("");
+        if (src == null || src.length <= 0) {
+            return null;
+        }
+        for (int i = 0; i < src.length; i++) {
+            int v = src[i] & 0xFF;
+            stringBuilder.append("0x");
+            String hv = Integer.toHexString(v);
+            if (hv.length() < 2) {
+                stringBuilder.append(0);
+            }
+            stringBuilder.append(hv);
+            stringBuilder.append(" ");
+        }
+        return stringBuilder.toString();
+    }
 
     Handler mHandler = new Handler() {
         @Override
         public void handleMessage(@NonNull Message msg) {
             switch (msg.what) {
                 case 1:
-                    Log.d(TAG,"id: " + mFrame.getID() + " data: " + Arrays.toString(mFrame.getBuf()));
+                    Log.d(TAG,"read can msg id: 0x" + Integer.toHexString(mFrame.getID())
+                            + " remote: " + mFrame.getRemote()
+                            + " data: " + bytesToHexString(mFrame.getBuf()));
                     break;
                 default:
                     Log.d(TAG,"message not important!");
