@@ -34,6 +34,8 @@
 #include <linux/netlink.h>
 
 #include <libsocketcan.h>
+#include "trace.h"
+#define LOG_TAG "libsocketcan"
 
 #define parse_rtattr_nested(tb, max, rta) \
 	(parse_rtattr((tb), (max), RTA_DATA(rta), RTA_PAYLOAD(rta)))
@@ -205,6 +207,7 @@ static int send_mod_request(int fd, struct nlmsghdr *n)
 						return 0;
 
 					perror("RTNETLINK answers");
+                    //LOGD("fd: %d errno: %d status: %d", fd, errno, status);
 				}
 				return -1;
 			}

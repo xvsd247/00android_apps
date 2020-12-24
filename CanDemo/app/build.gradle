@@ -7,7 +7,7 @@ android {
     defaultConfig {
         applicationId "com.zl.candemo"
         minSdkVersion 16
-        targetSdkVersion 29
+        targetSdkVersion 19
         versionCode 1
         versionName "1.0"
 
@@ -18,10 +18,23 @@ android {
             }
         }
         ndk {
-            abiFilters "armeabi-v7a" ,"armeabi"//, "x86","arm64-v8a","x86_64"
+            abiFilters "armeabi-v7a", "arm64-v8a"//, armeabi-v7a, "x86", "x86_64"
         }
     }
-
+    signingConfigs {
+        release {
+            storeFile file('D:\\App\\applications\\signAPK\\a9_sign_release.jks')
+            storePassword '123456'
+            keyAlias = 'a9_sign'
+            keyPassword '123456'
+        }
+        debug {
+            storeFile file('D:\\App\\applications\\signAPK\\a9_sign_release.jks')
+            storePassword '123456'
+            keyPassword '123456'
+            keyAlias = 'a9_sign'
+        }
+    }
     buildTypes {
         release {
             minifyEnabled false

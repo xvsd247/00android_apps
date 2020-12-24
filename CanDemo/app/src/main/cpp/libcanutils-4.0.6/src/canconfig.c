@@ -34,7 +34,11 @@
 #include <libsocketcan.h>
 #include <can_config.h>
 #include <canutils.h>
+#include <stdbool.h>
 
+#include "trace.h"
+
+#define LOG_TAG "canconfig"
 #ifndef MIN
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #endif
@@ -581,41 +585,60 @@ int main(int argc, char *argv[])
 
 	exit(EXIT_SUCCESS);
 }*/
+
 int can_config(int bitrate, int loopback, int restart_ms)
 {
 	const char *name = "can0";
 	int state;
 	int count = 0;
 	struct can_ctrlmode cm;
-	memset(&cm, 0, sizeof(cm));
 
+	memset(&cm, 0, sizeof(cm));
+	LOGD("config bitrate: %d, loopback: %d, restart_ms: %d!", bitrate, loopback, restart_ms);
 	if(bitrate < 0) {
-		printf("bitrate error!");
-		exit(EXIT_FAILURE);
+		LOGE("bitrate value error!");
+		return(EXIT_FAILURE);
 	}
 
+//    if (!checkPermission("android.permission.INTERNET")) {
+//        return PERMISSION_DENIED;
+//    }
 	/*set can link down before config*/
 	while (((can_get_state(name, &state)) < 0) && count < 10) {
 		count++;
 		usleep(300000);
-		printf("get state faile!");
+		LOGE("get state faile!");
 	}
-	if (state != CAN_STATE_BUS_OFF) {
+
+	if (state != CAN_STATE_STOPPED) {
 		can_do_stop(name);
 	}
 	/*set bitrate*/
-	can_set_bitrate(name, bitrate);
+	if(can_set_bitrate(name, bitrate) < 0) {
+		LOGE("set bitrate error!");
+		return(EXIT_FAILURE);
+	}
 
 	/*set loopback*/
 	if(loopback) {
 		cm.flags |= CAN_CTRLMODE_LOOPBACK;
 	}
-	can_set_ctrlmode(name, &cm);
+	if(can_set_ctrlmode(name, &cm) < 0) {
+		LOGE("set mode error!");
+		return(EXIT_FAILURE);
+	}
 
 	/*set interval of auto restart.*/
-	can_set_restart_ms(name, (restart_ms<=0 ? 10 : restart_ms));
+	if(can_set_restart_ms(name, (restart_ms<=0 ? 10 : restart_ms)) < 0) {
+		LOGE("set restart_time error!");
+		return(EXIT_FAILURE);
+	}
 
-	can_do_start(name);
+	if(can_do_start(name) < 0) {
+		LOGD("config can error");
+		return(EXIT_FAILURE);
+	} else {
+		return(EXIT_SUCCESS);
+	}
 
-	exit(EXIT_SUCCESS);
 }

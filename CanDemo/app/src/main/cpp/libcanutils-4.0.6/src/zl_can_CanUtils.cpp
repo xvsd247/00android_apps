@@ -8,6 +8,7 @@
 #include <assert.h>
 #include<android/log.h>
 #include <android/native_window_jni.h>
+#include <linux/can.h>
 #include "trace.h"
 #include "canutils.h"
 #ifdef __cplusplus
@@ -17,6 +18,7 @@ extern "C" {
 #define LOG_TAG "zl_can_CanUtils"
 #define NELEM(p) ((int) sizeof(p) / sizeof(p[0]))
 int data[8] = {0};
+jobject callback;
 jint registerNativeMethods(JNIEnv* env, const char *class_name, JNINativeMethod *methods, int num_methods) {
     int result = 0;
 
@@ -33,12 +35,13 @@ jint registerNativeMethods(JNIEnv* env, const char *class_name, JNINativeMethod 
 }
 
 static jboolean flexcan_init(JNIEnv* env,jclass clazz) {
-    LOGE("load so and init success");
+    LOGD("load so and init success");
     return true;
 }
 
 static jboolean flexcan_native_config(JNIEnv* env, jclass clazz,
      jint bitrate, jint loopback, jint restart_ms) {
+    LOGE("Start Config can!");
     if(can_config((int)bitrate, (int)loopback, (int)restart_ms)) {
         LOGE("Config can error!");
         return false;
@@ -57,26 +60,86 @@ static jboolean  flexcan_native_send(JNIEnv* env, jclass clazz,
     return true;
 }
 
-static int callback(int id, int r, int idc) {
-    LOGD("data come");
-}
-
 static jboolean flexcan_native_readloop(JNIEnv* env, jclass clazz,
-        jint family, jint type, jint proto, jint filter_count, jintArray filter_p, jintArray data, jobject callback) {
+        jint id, jint mask, jobject jframe) {
+    int s = can_dump_open((int)id, (int)mask);
+    int can_id, i;
+    struct can_frame frame;
+    jclass frame_cls = env->FindClass("com/zl/can/Frame");
+    if(frame_cls == NULL) {
+        LOGE("find class FlexcanService error!");
+        return -1;
+    }
+    //get frame method
+    jmethodID setID = env->GetMethodID(frame_cls,"setID","(I)V");
+    if( setID == NULL) {
+        LOGE("get setID error!");
+        return -1;
+    }
+    jmethodID setBuf = env->GetMethodID(frame_cls,"setBuf","([I)V");
+    if(setBuf == NULL){
+        LOGE("get setBuf error!");
+        return -1;
+    }
+    jmethodID setDlc= env->GetMethodID(frame_cls,"setDlc","(I)V");
+    if(setDlc == NULL){
+        LOGE("get setDlc error!");
+        return -1;
+    }
+    jmethodID setRemote= env->GetMethodID(frame_cls,"setRemote","(I)V");
+    if(setRemote == NULL){
+        LOGE("get setRemote error!");
+        return -1;
+    }
 
-    jint tdata[8];
-    if(can_dump((int)family, (int)type, (int)proto, (int)filter_count, filter_p, tdata, callback)) {
-        LOGE("Start read data loop error!");
+    jmethodID dataReadyNotifly= env->GetMethodID(frame_cls,"dataReadyNotifly","(V)V");
+    if(dataReadyNotifly == NULL){
+        LOGE("get setRemote error!");
+        return -1;
+    }
+
+    if(jframe == NULL) {
+        LOGE("frame NULL error!");
+        return -1;
+    }
+
+    if(s > 0) {
+        while(can_dump_start(s, &frame) > 0) {
+            if (frame.can_id & CAN_EFF_FLAG)
+                env->CallVoidMethod(jframe, setID, frame.can_id & CAN_EFF_MASK);
+            else
+                env->CallVoidMethod(jframe, setID, frame.can_id & CAN_SFF_MASK);
+            jintArray arr;
+            arr = env->NewIntArray(8);
+            if(arr == NULL) {
+                LOGE("arr init error!");
+                return -1;
+            }
+            jint data[8];
+            for(i=0; i < frame.can_dlc; i++) {
+                data[i] = (jint)frame.data[i];
+            }
+            env->SetIntArrayRegion(arr, 0, 8, data);
+            env->CallVoidMethod(jframe, setBuf, arr);
+            env->DeleteLocalRef(arr);
+
+            if (frame.can_id & CAN_RTR_FLAG) {
+                env->CallVoidMethod(jframe, setRemote, 1);
+            } else {
+                env->CallVoidMethod(jframe, setRemote, 0);
+            }
+        }
+        LOGE("a error occured when read data, please reopen CAN");
         return false;
     }
-    return true;
+    return false;
 }
 
 static JNINativeMethod methods[] = {
         {"init_native","()Z",(void*)flexcan_init},
         {"flexcan_native_config","(III)Z",(void*)flexcan_native_config},
         {"flexcan_native_send","(IIIIII[I)Z",(void*)flexcan_native_send},
-        {"flexcan_native_readloop","(IIII[I[ILcom/zl/can/CanCallback)Z",(void*)flexcan_native_readloop},
+        {"flexcan_native_readloop","(IILcom/zl/can/Frame;)Z",(void*)flexcan_native_readloop},
 };
 
 int register_flexcan(JNIEnv* env) {
