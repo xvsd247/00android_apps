@@ -21,6 +21,10 @@
 #include <linux/can.h>
 #include <linux/can/raw.h>
 #include "trace.h"
+
+#include <sys/select.h>
+#include <sys/time.h>
+
 #define LOG_TAG "condump"
 
 extern int optind, opterr, optopt;
@@ -288,35 +292,47 @@ int can_dump_open(int id, int mask) {
 
 int can_dump_start(int s, struct can_frame *frame)
 {
-	int optdaemon = 0;
+	int retval = 0;
 	int nbytes;
+	fd_set rfds;
+	struct timeval tv;
 
 	signal(SIGPIPE, SIG_IGN);
-	if (optdaemon)
-		daemon(1, 0);
-	else {
-		signal(SIGTERM, sigterm);
-		signal(SIGHUP, sigterm);
-	}
 
-	LOGD("start dump pid: %d", getpid());
+//	LOGD("start dump pid: %d", getpid());
 	while (running) {
-		if ((nbytes = read(s, frame, sizeof(struct can_frame))) < 0) {
-			LOGE("read");
-			close(s);
-			return -1;
+		FD_ZERO(&rfds);
+		FD_SET(s, &rfds);
+		tv.tv_sec = 1;
+		tv.tv_usec = 0;
+		retval = select(s+1, &rfds, NULL, NULL, &tv);
+		if (retval == -1) {
+			LOGE("select");
+			break;
+		} else if (retval) {
+			if(FD_ISSET(s, &rfds)) {
+				if ((nbytes = read(s, frame, sizeof(struct can_frame))) < 0) {
+					LOGE("read error");
+				} else {
+					//LOGD("read: %d bytes", nbytes);
+					return nbytes;
+				}
+			}
 		} else {
-			LOGE("read: ", nbytes);
-			return nbytes;
+			//LOGD("no data read in %d ms", tv.tv_usec);
 		}
 	}
-	LOGE("dump stopped");
-	return -1;
+	close(s);
+	if(running == 0) {
+		return 0;
+	} else {
+		LOGE("read error");
+		return -1;
+	};
 }
 
 int can_dump_stop(int s) {
-	LOGD("stop dump pid: %d", getpid());
-	close(s);
+	//close(s);
 	//kill(getpid(), SIGQUIT);
 	running = 0;
 	return 1;

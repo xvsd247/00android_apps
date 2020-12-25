@@ -1,14 +1,12 @@
 package com.zl.can;
+import android.os.Handler;
 import android.util.Log;
-
-import static java.lang.Thread.interrupted;
 
 public class CanUtils {
     private static final String TAG = "CanUtils";
-    // Used to load the 'native-lib' library on application startup.
     private static boolean isLoaded;
-    public Frame frame;
-    public Thread mThread;
+    private Frame frame;
+    private Thread mThread;
     private  boolean running = true;
     static {
         if (!isLoaded) {
@@ -21,34 +19,42 @@ public class CanUtils {
      * the sonctructor of this class should be call within the thread that has a looper
      * (UI thread or a thread that called Looper.prepare)
      */
-    public CanUtils(Frame mFrame) {
+    public CanUtils(Handler mHandler) {
         init_native();
-        frame = mFrame;
-        //mThread = new Thread(new CanDumpThread());
+        frame = new Frame(mHandler);
     }
 
-    public void newThread() {
+    public Frame getFrame(){
+        return this.frame;
+    }
+
+    public void startThread() {
         if(mThread != null) {
             //to be done
+            stopThread();
         }
         mThread = new CanDumpThread();
         running = true;
+        mThread.start();
     }
-    public void stopThread(Thread mThread) {
+    public void stopThread() {
         running = false;
         flexcan_native_stopread();
-        mThread.interrupt();
+        if(mThread != null) {
+            mThread.interrupt();
+            mThread = null;
+        }
     }
-    public class CanDumpThread extends Thread {
+    private class CanDumpThread extends Thread {
         @Override
         public void run() {
             while (running) {
                 try {
                     running = flexcan_native_readloop(0, 0, frame);
-                    Log.e(TAG, "readloop return: " + running);
+                    //Log.e(TAG, "read loop err occur");
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {
-                    Log.e(TAG, "interrupt occurred, stop thread");
+                    //Log.e(TAG, "interrupt occurred, stop thread");
                     return;
                 }
             }
@@ -62,5 +68,5 @@ public class CanUtils {
     public native boolean flexcan_native_config(int bitrate, int loopback, int restart_ms);
     public native boolean flexcan_native_send(int id, int dlc, int extended, int rtr, int infinite, int loopcount, int data[]);
     private native boolean flexcan_native_readloop(int id, int mask, Frame frame);
-    public native boolean flexcan_native_stopread();
+    private native boolean flexcan_native_stopread();
 }

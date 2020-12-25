@@ -76,7 +76,7 @@ static jboolean  flexcan_native_send(JNIEnv* env, jclass clazz,
 static jboolean flexcan_native_readloop(JNIEnv* env, jclass clazz,
         jint id, jint mask, jobject jframe) {
     s = can_dump_open((int)id, (int)mask);
-    int i;
+    int i,ret;
     struct can_frame frame;
     jclass frame_cls = env->FindClass("com/zl/can/Frame");
     if(frame_cls == NULL) {
@@ -105,7 +105,7 @@ static jboolean flexcan_native_readloop(JNIEnv* env, jclass clazz,
         return -1;
     }
 
-    jmethodID dataReadyNotifly= env->GetMethodID(frame_cls,"dataReadyNotifly","()V");
+    jmethodID dataReadyNotifly= env->GetMethodID(frame_cls,"dataReadyNotifly","(I)V");
     if(dataReadyNotifly == NULL){
         LOGE("get setRemote error!");
         return -1;
@@ -117,7 +117,7 @@ static jboolean flexcan_native_readloop(JNIEnv* env, jclass clazz,
     }
 
     if(s > 0) {
-        while(can_dump_start(s, &frame) > 0) {
+        while((ret = can_dump_start(s, &frame)) > 0) {
             if (frame.can_id & CAN_EFF_FLAG)
                 env->CallVoidMethod(jframe, setID, frame.can_id & CAN_EFF_MASK);
             else
@@ -142,10 +142,11 @@ static jboolean flexcan_native_readloop(JNIEnv* env, jclass clazz,
                 env->CallVoidMethod(jframe, setRemote, 0);
             }
 
-            env->CallVoidMethod(jframe, dataReadyNotifly);
+            env->CallVoidMethod(jframe, dataReadyNotifly, 1);
         }
         //ThrowException(env, "java/lang/InterruptedException", "error occured when read data");
-        LOGE("a error occured when read data, please reopen CAN");
+        //LOGE("a error occured when read data, please reopen CAN");
+        env->CallVoidMethod(jframe, dataReadyNotifly, ret);
         return false;
     }
     return false;

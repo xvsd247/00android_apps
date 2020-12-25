@@ -55,9 +55,10 @@ public class Frame {
         else
             return this.buf[index];
     }
-    public void dataReadyNotifly (){
+
+    public void dataReadyNotifly (int flag){
         Message message = new Message();
-        message.what = 1;
+        message.what = flag;
         mHandler.sendMessage(message);
     }
 }

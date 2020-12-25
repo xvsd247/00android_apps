@@ -9,19 +9,14 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Switch;
-import android.widget.TextView;
 import com.zl.can.CanUtils;
 import com.zl.can.Frame;
 
 import android.util.Log;
 
-import java.lang.reflect.Array;
-import java.util.Arrays;
-
 public class MainActivity extends AppCompatActivity implements android.view.View.OnClickListener {
     private static final String TAG = "MainActivity";
     private CanUtils mCanUtils;
-    public Frame mFrame;
     private Button button = null;
     private Button button1 = null;
     private Switch mSwitch = null;
@@ -38,8 +33,7 @@ public class MainActivity extends AppCompatActivity implements android.view.View
         button1.setOnClickListener(this);
         mSwitch = (Switch) findViewById(R.id.switch1);
         mSwitch.setOnClickListener(this);
-        mFrame = new Frame(mHandler);
-        mCanUtils = new CanUtils(mFrame);
+        mCanUtils = new CanUtils(mHandler);
     }
     public static String bytesToHexString(int[] src){
         StringBuilder stringBuilder = new StringBuilder("");
@@ -63,10 +57,17 @@ public class MainActivity extends AppCompatActivity implements android.view.View
         @Override
         public void handleMessage(@NonNull Message msg) {
             switch (msg.what) {
+                case 0:
+                    Log.e(TAG, "read loop stopped");
+                    break;
                 case 1:
-                    Log.d(TAG,"read can msg id: 0x" + Integer.toHexString(mFrame.getID())
-                            + " remote: " + mFrame.getRemote()
-                            + " data: " + bytesToHexString(mFrame.getBuf()));
+                    Log.d(TAG,"read can msg id: 0x" + Integer.toHexString(mCanUtils.getFrame().getID())
+                            + " remote: " + mCanUtils.getFrame().getRemote()
+                            + " data: " + bytesToHexString(mCanUtils.getFrame().getBuf()));
+                    break;
+                case -1:
+                    Log.e(TAG, "error occur when read");
+                    mCanUtils.stopThread();
                     break;
                 default:
                     Log.d(TAG,"message not important!");
@@ -91,11 +92,10 @@ public class MainActivity extends AppCompatActivity implements android.view.View
             if(mSwitch.isChecked()) {
                 Log.d(TAG, "start read");
 
-                mCanUtils.newThread();
-                mCanUtils.mThread.start();
+                mCanUtils.startThread();
             } else {
                 Log.d(TAG, "stop read");
-                mCanUtils.stopThread(mCanUtils.mThread);
+                mCanUtils.stopThread();
             }
         }
     }
