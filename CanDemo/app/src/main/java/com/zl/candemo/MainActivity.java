@@ -92,7 +92,9 @@ public class MainActivity extends AppCompatActivity implements android.view.View
             if(mSwitch.isChecked()) {
                 Log.d(TAG, "start read");
 
-                mCanUtils.startThread();
+                if(!mCanUtils.startThread()) {
+                    mSwitch.setChecked(false);
+                }
             } else {
                 Log.d(TAG, "stop read");
                 mCanUtils.stopThread();

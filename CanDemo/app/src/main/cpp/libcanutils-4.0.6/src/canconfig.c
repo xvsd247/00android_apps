@@ -585,6 +585,19 @@ int main(int argc, char *argv[])
 
 	exit(EXIT_SUCCESS);
 }*/
+int can_status()
+{
+	const char *name = "can0";
+	int state;
+	int count = 0;
+	while (((can_get_state(name, &state)) < 0) && count < 10) {
+		count++;
+		usleep(300000);
+		LOGE("get state faile!");
+		return -1;
+	}
+	return state;
+}
 
 int can_config(int bitrate, int loopback, int restart_ms)
 {

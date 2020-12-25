@@ -8,6 +8,7 @@ public class CanUtils {
     private Frame frame;
     private Thread mThread;
     private  boolean running = true;
+
     static {
         if (!isLoaded) {
             System.loadLibrary("canutils");
@@ -20,7 +21,6 @@ public class CanUtils {
      * (UI thread or a thread that called Looper.prepare)
      */
     public CanUtils(Handler mHandler) {
-        init_native();
         frame = new Frame(mHandler);
     }
 
@@ -28,7 +28,12 @@ public class CanUtils {
         return this.frame;
     }
 
-    public void startThread() {
+    public boolean startThread() {
+        int status = flexcan_native_getstate();
+        if(status < 0 || status > 3 ) {
+            Log.e(TAG, "CAN bus off or error!");
+            return false;
+        }
         if(mThread != null) {
             //to be done
             stopThread();
@@ -36,6 +41,7 @@ public class CanUtils {
         mThread = new CanDumpThread();
         running = true;
         mThread.start();
+        return true;
     }
     public void stopThread() {
         running = false;
@@ -64,7 +70,7 @@ public class CanUtils {
      * A native method that is implemented by the 'native-lib' native library,
      * which is packaged with this application.
      */
-    public native boolean init_native();
+    public native int flexcan_native_getstate();
     public native boolean flexcan_native_config(int bitrate, int loopback, int restart_ms);
     public native boolean flexcan_native_send(int id, int dlc, int extended, int rtr, int infinite, int loopcount, int data[]);
     private native boolean flexcan_native_readloop(int id, int mask, Frame frame);

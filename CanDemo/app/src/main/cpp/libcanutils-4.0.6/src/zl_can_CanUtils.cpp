@@ -156,8 +156,12 @@ static jboolean flexcan_native_stopread(JNIEnv* env, jclass clazz) {
     return can_dump_stop(s);
 }
 
+static jint flexcan_native_getstate(JNIEnv* env, jclass clazz, jint status) {
+    return can_status();
+}
+
 static JNINativeMethod methods[] = {
-        {"init_native","()Z",(void*)flexcan_init},
+        {"flexcan_native_getstate","()I",(void*)flexcan_native_getstate},
         {"flexcan_native_config","(III)Z",(void*)flexcan_native_config},
         {"flexcan_native_send","(IIIIII[I)Z",(void*)flexcan_native_send},
         {"flexcan_native_readloop","(IILcom/zl/can/Frame;)Z",(void*)flexcan_native_readloop},

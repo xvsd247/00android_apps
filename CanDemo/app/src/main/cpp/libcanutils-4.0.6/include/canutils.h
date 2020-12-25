@@ -14,7 +14,7 @@ int can_send(int id, int dlc, int extended,int rtr, int infinite, int loopcount,
 int can_dump_open(int id, int mask);
 int can_dump_start(int s, struct can_frame *frame);
 int can_dump_stop(int s);
-
+int can_status();
 #ifdef __cplusplus
 }
 #endif
