@@ -3,5 +3,5 @@
     <string name="hello">Hello World, Flexcan!</string>
     <string name="button">send!!</string>
     <string name="button1">config!!</string>
-    <string name="button2">dump!!</string>
+    <string name="switch1">dump!!</string>
 </resources>

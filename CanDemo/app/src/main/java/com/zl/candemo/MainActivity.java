@@ -8,6 +8,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Switch;
 import android.widget.TextView;
 import com.zl.can.CanUtils;
 import com.zl.can.Frame;
@@ -23,7 +24,7 @@ public class MainActivity extends AppCompatActivity implements android.view.View
     public Frame mFrame;
     private Button button = null;
     private Button button1 = null;
-    private Button button2 = null;
+    private Switch mSwitch = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,8 +36,8 @@ public class MainActivity extends AppCompatActivity implements android.view.View
         button.setOnClickListener(this);
         button1 = (Button) findViewById(R.id.button1);
         button1.setOnClickListener(this);
-        button2 = (Button) findViewById(R.id.button2);
-        button2.setOnClickListener(this);
+        mSwitch = (Switch) findViewById(R.id.switch1);
+        mSwitch.setOnClickListener(this);
         mFrame = new Frame(mHandler);
         mCanUtils = new CanUtils(mFrame);
     }
@@ -86,8 +87,16 @@ public class MainActivity extends AppCompatActivity implements android.view.View
         } else if (v.equals(button1)) {
             Log.d(TAG, "Config can interface and tear up it!!!");
             mCanUtils.flexcan_native_config(125000, 1, 20);
-        } else if (v.equals(button2)) {
-            mCanUtils.mThread.start();
+        } else if (v.equals(mSwitch)) {
+            if(mSwitch.isChecked()) {
+                Log.d(TAG, "start read");
+
+                mCanUtils.newThread();
+                mCanUtils.mThread.start();
+            } else {
+                Log.d(TAG, "stop read");
+                mCanUtils.stopThread(mCanUtils.mThread);
+            }
         }
     }
 }

@@ -18,10 +18,10 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:text="@string/button1" />"
-    <Button
-        android:id="@+id/button2"
+    <Switch
+        android:id="@+id/switch1"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:text="@string/button2" />"
+        android:text="@string/switch1" />"
 
 </LinearLayout>

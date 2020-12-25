@@ -20,6 +20,8 @@
 
 #include <linux/can.h>
 #include <linux/can/raw.h>
+#include "trace.h"
+#define LOG_TAG "condump"
 
 extern int optind, opterr, optopt;
 
@@ -287,8 +289,7 @@ int can_dump_open(int id, int mask) {
 int can_dump_start(int s, struct can_frame *frame)
 {
 	int optdaemon = 0;
-	int nbytes,i;
-	int can_id, can_r;
+	int nbytes;
 
 	signal(SIGPIPE, SIG_IGN);
 	if (optdaemon)
@@ -298,16 +299,25 @@ int can_dump_start(int s, struct can_frame *frame)
 		signal(SIGHUP, sigterm);
 	}
 
+	LOGD("start dump pid: %d", getpid());
 	while (running) {
 		if ((nbytes = read(s, frame, sizeof(struct can_frame))) < 0) {
-			perror("read");
+			LOGE("read");
 			close(s);
-			return -11;
+			return -1;
 		} else {
+			LOGE("read: ", nbytes);
 			return nbytes;
 		}
 	}
+	LOGE("dump stopped");
+	return -1;
+}
 
+int can_dump_stop(int s) {
+	LOGD("stop dump pid: %d", getpid());
 	close(s);
-	return EXIT_SUCCESS;
+	//kill(getpid(), SIGQUIT);
+	running = 0;
+	return 1;
 }
