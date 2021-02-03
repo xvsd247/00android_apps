@@ -13,10 +13,12 @@ import com.zl.can.CanUtils;
 import com.zl.can.Frame;
 
 import android.util.Log;
+import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity implements android.view.View.OnClickListener {
     private static final String TAG = "MainActivity";
     private CanUtils mCanUtils;
+    private TextView mText = null;
     private Button button = null;
     private Button button1 = null;
     private Switch mSwitch = null;
@@ -27,6 +29,7 @@ public class MainActivity extends AppCompatActivity implements android.view.View
         setContentView(R.layout.activity_main);
 
         // Example of a call to a native method
+        mText = (TextView) findViewById(R.id.text);
         button = (Button) findViewById(R.id.button);
         button.setOnClickListener(this);
         button1 = (Button) findViewById(R.id.button1);
@@ -64,6 +67,11 @@ public class MainActivity extends AppCompatActivity implements android.view.View
                     Log.d(TAG,"read can msg id: 0x" + Integer.toHexString(mCanUtils.getFrame().getID())
                             + " remote: " + mCanUtils.getFrame().getRemote()
                             + " data: " + bytesToHexString(mCanUtils.getFrame().getBuf()));
+                    mText.append("\n");
+                    mText.append("id: 0x" + Integer.toHexString(mCanUtils.getFrame().getID()) +
+                            " data: " +bytesToHexString(mCanUtils.getFrame().getBuf()));
+                    int offset = mText.getLineCount() * mText.getLineHeight();
+                    if (offset > mText.getHeight()) mText.scrollTo(0, offset - mText.getHeight());
                     break;
                 case -1:
                     Log.e(TAG, "error occur when read");
