@@ -72,7 +72,7 @@ public class CanUtils {
      */
     public native int flexcan_native_getstate();
     public native boolean flexcan_native_config(int bitrate, int loopback, int restart_ms);
-    public native boolean flexcan_native_send(int id, int dlc, int extended, int rtr, int infinite, int loopcount, int data[]);
+    public native boolean flexcan_native_send(int id, int dlc, int extended, int rtr, int loopcount, int data[]);
     private native boolean flexcan_native_readloop(int id, int mask, Frame frame);
     private native boolean flexcan_native_stopread();
 }

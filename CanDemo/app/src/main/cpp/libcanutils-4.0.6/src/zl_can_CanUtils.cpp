@@ -50,10 +50,10 @@ static jboolean flexcan_native_config(JNIEnv* env, jclass clazz,
 }
 
 static jboolean  flexcan_native_send(JNIEnv* env, jclass clazz,
-        jint id, jint dlc, jint extended, jint rtr, jint infinite, jint loopcount, jintArray data) {
+        jint id, jint dlc, jint extended, jint rtr, jint loopcount, jintArray data) {
     jint buf[8];
     env->GetIntArrayRegion(data, 0 ,8, buf);
-    if(can_send((int)id, 8, (int)extended, (int)rtr, (int)infinite, (int)loopcount, buf)) {
+    if(can_send((int)id, 8, (int)extended, (int)rtr, (int)loopcount, buf)) {
         LOGE("Send data error!");
         return false;
     }
@@ -163,7 +163,7 @@ static jint flexcan_native_getstate(JNIEnv* env, jclass clazz, jint status) {
 static JNINativeMethod methods[] = {
         {"flexcan_native_getstate","()I",(void*)flexcan_native_getstate},
         {"flexcan_native_config","(III)Z",(void*)flexcan_native_config},
-        {"flexcan_native_send","(IIIIII[I)Z",(void*)flexcan_native_send},
+        {"flexcan_native_send","(IIIII[I)Z",(void*)flexcan_native_send},
         {"flexcan_native_readloop","(IILcom/zl/can/Frame;)Z",(void*)flexcan_native_readloop},
         {"flexcan_native_stopread","()Z",(void*)flexcan_native_stopread},
 };

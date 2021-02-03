@@ -80,7 +80,7 @@ public class MainActivity extends AppCompatActivity implements android.view.View
         if (v.equals(button)) {
             try {
                 int data[] = {0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77};
-                mCanUtils.flexcan_native_send(0x55, 8, 0, 0, 0, 1, data);
+                mCanUtils.flexcan_native_send(0x55, 8, 0, 0, 1, data);
             } catch (Exception e) {
                 // TODO: handle exception
                 Log.e(TAG, "Remote exception while flexcan send!!!");

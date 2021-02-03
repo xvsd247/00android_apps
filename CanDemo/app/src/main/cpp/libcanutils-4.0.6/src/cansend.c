@@ -18,6 +18,9 @@
 
 #include <linux/can.h>
 #include <linux/can/raw.h>
+#include "trace.h"
+
+#define LOG_TAG "cansend"
 /*
 extern int optind, opterr, optopt;
 
@@ -194,7 +197,7 @@ int main(int argc, char **argv)
 	return 0;
 }*/
 
-int can_send(int id, int dlc, int extended,int rtr, int infinite, int loopcount, int *data)
+int can_send(int id, int dlc, int extended,int rtr, int loopcount, int *data)
 {
 	if(loopcount <= 0) {
 		loopcount = 1;
@@ -209,25 +212,25 @@ int can_send(int id, int dlc, int extended,int rtr, int infinite, int loopcount,
 	int s, ret, i;
 	int verbose = 0;
 
-	printf("interface = %s, family = %d, type = %d, proto = %d\n",
+	LOGE("interface = %s, family = %d, type = %d, proto = %d\n",
 		   interface, family, type, proto);
 
 	s = socket(family, type, proto);
 	if (s < 0) {
-		perror("socket");
+		LOGE("socket");
 		return 1;
 	}
 
 	addr.can_family = family;
 	strcpy(ifr.ifr_name, interface);
 	if (ioctl(s, SIOCGIFINDEX, &ifr)) {
-		perror("ioctl");
+		LOGE("ioctl");
 		return 1;
 	}
 	addr.can_ifindex = ifr.ifr_ifindex;
 
 	if (bind(s, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
-		perror("bind");
+		LOGE("bind");
 		return 1;
 	}
 
@@ -240,7 +243,6 @@ int can_send(int id, int dlc, int extended,int rtr, int infinite, int loopcount,
 		}
 	}
 	frame.can_dlc = 8;
-
 
 	if (extended) {
 		frame.can_id &= CAN_EFF_MASK;
@@ -260,10 +262,10 @@ int can_send(int id, int dlc, int extended,int rtr, int infinite, int loopcount,
 		printf("\n");
 	}
 
-	while (infinite || loopcount--) {
+	while (loopcount--) {
 		ret = write(s, &frame, sizeof(frame));
 		if (ret == -1) {
-			perror("write");
+			LOGE("write");
 			break;
 		}
 	}
